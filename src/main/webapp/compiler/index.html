@@ -1,0 +1,125 @@
+<!doctype html>
+<html class="h-90">
+<head>
+  <link rel="stylesheet" href="lib/codemirror.css">
+  <link rel="stylesheet" href="theme/ambiance.css">
+  <script src="lib/codemirror.js"></script>
+  <script src="addon/edit/matchbrackets.js"></script>
+  <script src="mode/clike/clike.js"></script>
+  <link href="../css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/product.css" rel="stylesheet">
+</head>
+<body class="h-100">
+<nav class="site-header sticky-top py-1">
+  <div class="container d-flex flex-column flex-md-row justify-content-between">
+    <a class="py-2" href="../">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="d-block mx-auto"><circle cx="12" cy="12" r="10"></circle><line x1="14.31" y1="8" x2="20.05" y2="17.94"></line><line x1="9.69" y1="8" x2="21.17" y2="8"></line><line x1="7.38" y1="12" x2="13.12" y2="2.06"></line><line x1="9.69" y1="16" x2="3.95" y2="6.06"></line><line x1="14.31" y1="16" x2="2.83" y2="16"></line><line x1="16.62" y1="12" x2="10.88" y2="21.94"></line></svg>
+    </a>
+    <a class="py-2 d-none d-md-inline-block" href="#">Compiler</a>
+    <a class="py-2 d-none d-md-inline-block" href="#">Features</a>
+    <a class="py-2 d-none d-md-inline-block" href="#">Support</a>
+    <a class="py-2 d-none d-md-inline-block" href="#">Pricing</a>
+  </div>
+</nav>
+<div class="container-fluid h-100">
+  <div class="row h-100">
+    <div class="col-6">
+      <textarea id="scala-editor"></textarea>
+    </div>
+    <div class="col-6">
+      <div class="row">
+        <div class="col text-center">
+          <h2>Dataset Info</h2>
+        </div>
+      </div>
+      <div class="row">info one...</div>
+      <div class="row">info two...</div>
+      <div class="row">info three...</div>
+      <div class="row" style="margin-top:30%">
+        <div class="col-4">
+          <button type="button" class="btn btn-outline-success btn-block" onclick="SubmitScalaCode()">Submit</button>
+        </div>
+        <div class="col-4">
+          <button type="button" class="btn btn-outline-danger btn-block">Clear</button>
+        </div>
+        <div class="col-4">
+          <button type="button" class="btn btn-primary btn-block" id="compile-button" onclick="CompileScalaCode()" disabled>Compile</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:5%;">
+        <div class="col text-center">
+          <h2>Log</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div id="log"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("scala-editor"), {
+          lineNumbers: true,
+          matchBrackets: true,
+          theme: "ambiance",
+          mode: "text/x-scala"
+      });
+      editor.setSize("100%", "100%");
+    </script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script>
+      var program = {
+        programName: "",
+        datasetID: 0,
+        programContent: ""
+      }
+
+      function SubmitScalaCode(){
+        program.programName = $("#prog-name").text();
+        program.datasetID = 1;
+        program.programContent = editor.getValue();
+
+        $('#log').html('sending..');
+
+        $.ajax({
+            url: '../api/compiler/upload/',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data) {
+                $('#log').text(JSON.stringify(data));
+                storeProgramName(data);
+                $('#compile-button').prop('disabled', false);
+            },
+            data: JSON.stringify(program)
+        });
+      }
+
+      function storeProgramName(response){
+        if(response.error == 0){
+          program.programName = response.result;
+        }
+        console.log(program);
+      }
+
+      function CompileScalaCode(){
+        $('#log').html('compiling..');
+
+        $.ajax({
+            url: '../api/compiler/compile/',
+            type: 'post',
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data) {
+                $('#log').html(data.result);
+            },
+            data: JSON.stringify(program)
+        });
+      }
+    </script>
+</body>
+</html>
