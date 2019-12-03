@@ -3,8 +3,7 @@ package org.k2.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.k2.models.JsonResponseModel;
 import org.k2.models.ScalaFileModel;
-import org.k2.models.ScalaFilenameModel;
-import org.k2.utilities.ScalaCompiler;
+import org.k2.utilities.ScalaShellCompiler;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -26,7 +25,7 @@ public class ScalaCompilerServer {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("upload")
-    public String saveFile(ScalaFileModel sfm) throws IOException {
+    public JsonResponseModel saveFile(ScalaFileModel sfm) throws IOException {
         String filename = UUID.randomUUID().toString();
 
         if(!new File("/opt/tomcat/uploads/"+filename+"/sourcecode.scala").exists())
@@ -41,14 +40,14 @@ public class ScalaCompilerServer {
             writer.write(sfm.getProgramContent());
             writer.close();
             JsonResponseModel response = new JsonResponseModel(filename,0);
-            return response.getJsonResponse(response);
+            return response;
         }
         JsonResponseModel response = new JsonResponseModel(
                 "",
                 1,
                 "File Exists"
         );
-        return response.getJsonResponse(response);
+        return response;
 
     }
 
@@ -56,10 +55,10 @@ public class ScalaCompilerServer {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("compile")
-    public String Compiler(ScalaFileModel sfm) throws JsonProcessingException {
-        ScalaCompiler compiler = new ScalaCompiler();
-        JsonResponseModel response = new JsonResponseModel(compiler.runCompiler(sfm.getProgramName()),0);
-        return response.getJsonResponse(response);
+    public JsonResponseModel Compiler(ScalaFileModel sfm) throws JsonProcessingException {
+        ScalaShellCompiler shellCompiler = new ScalaShellCompiler();
+        JsonResponseModel response = new JsonResponseModel(shellCompiler.runCompiler(sfm.getProgramName()),0);
+        return response;
     }
 
 }
